@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Servicio de base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: roco_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: 2dosemestreglobalprogramacion
+      MYSQL_USER: roco_user
+      MYSQL_PASSWORD: roco_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./2dosemestreglobalprogramacion.sql:/docker-entrypoint-initdb.d/2dosemestreglobalprogramacion.sql
+    networks:
+      - roco_network
+
+  # Servicio de aplicación PHP
+  app:
+    build: .
+    container_name: roco_php_app
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=2dosemestreglobalprogramacion
+      - DB_USER=roco_user
+      - DB_PASSWORD=roco_password
+    networks:
+      - roco_network
+
+  # Servicio de phpMyAdmin para administrar la base de datos
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: roco_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: roco_user
+      PMA_PASSWORD: roco_password
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - roco_network
+
+volumes:
+  mysql_data:
+
+networks:
+  roco_network:
+    driver: bridge 
